@@ -1,0 +1,71 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+.webgl{
+    position: fixed;
+    top: 0;
+    left: 0;
+    outline: none;
+}
+
+html,
+body{
+    overflow: hidden;
+}
+
+#box1{
+    height: 50px;
+    width: 50px;
+    border: 2px solid black;
+    margin-top: 0em;
+    margin-left: 0em;
+    position: absolute;
+    box-sizing: border-box;
+    animation: spin1 2s linear infinite;
+}
+
+#box2{
+    height: 50px;
+    width: 50px;
+    border: 2px solid black;
+    margin-top: 50px;
+    margin-left: 50px;
+    position: absolute;
+    #padding-left: 2px;
+    box-sizing: border-box;
+    animation: spin2 2s linear infinite;
+}
+
+@keyframes spin1{
+    0%{
+        #transform: rotate(0deg);
+        margin-left: 0px;
+        margin-top: 0px;
+    }
+    50%{
+        margin-left: 50px;
+        margin-top: 0px;
+    }
+    100%{
+        margin-top: 50px;
+        margin-left: 50px;
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spin2{
+    0%{
+        margin-left: 50px;
+        margin-top: 50px;
+    }
+    50%{
+        margin-left: 0px;
+        margin-top: 50px;
+    }
+    100%{
+        margin-top: 0px;
+        margin-left: 0px;
+        transform: rotate(360deg);
+    }
+}
