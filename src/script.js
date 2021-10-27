@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import gsap from 'gsap'
+import 'animate.css'
 
 import vertexShader from './shaders/ocean/shader.vert'
 import fragmentShader from './shaders/ocean/shader.frag'
@@ -29,6 +30,7 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+scene.fog = new THREE.FogExp2(0x000000, 0.25);
 
 /**
  * Water
@@ -524,8 +526,8 @@ fontLoader.load(typefaceFont, (font) => {
         color: '#fff'
     });
     textCodeMesh = new THREE.Mesh(textGeom, textMaterial);
+    textCodeMesh.position.x = -0.3;
     textCodeMesh.position.y = 0.05;
-    textCodeMesh.position.x = -0.2;
     textCodeMesh.position.z = 0.4;
     textCodeMesh.rotation.y = 0.3;
 
@@ -552,8 +554,8 @@ fontLoader.load(typefaceFont, (font) => {
         color: '#fff'
     });
     textMusicMesh = new THREE.Mesh(textGeom, textMaterial);
-    textMusicMesh.position.y = 0.1;
     textMusicMesh.position.x = -0.4;
+    textMusicMesh.position.y = 0.1;
     textMusicMesh.position.z = -0.1;
     textMusicMesh.rotation.y = 0.3;
 
@@ -561,6 +563,41 @@ fontLoader.load(typefaceFont, (font) => {
     textMusicMesh.receiveShadow = true;
     scene.add(textMusicMesh);
 });
+
+
+
+/**
+ * Infobox
+ */
+
+// plane approach
+const infoPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.4,0.5,1),
+    new THREE.MeshStandardMaterial({
+        color: new THREE.Color('#fff')
+    })
+    )
+    infoPlane.position.x = -0.6;
+    infoPlane.position.y = 0.3;
+    infoPlane.position.z = 0.4;
+    infoPlane.rotateY(0.35);
+    infoPlane.receiveShadow = true;
+    // scene.add(infoPlane);
+
+// Positions
+const points = [
+    {
+        // Code info box
+        position: new THREE.Vector3(-0.5, 0.65, 0.4),
+        element: document.getElementById('codeInfobox')
+    },
+    {
+        // Music info box
+        position: new THREE.Vector3(-0.62, 0.7, -0.1),
+        element: document.getElementById('musicInfobox')
+    }
+]
+
 
 // Debug parameters
 
@@ -619,7 +656,7 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-let camera = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 0.1, 100)
+let camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(0.8, 0.5,1.35);
 camera.up = new THREE.Vector3(0,1,0);
 camera.lookAt(0.0, 0.0, 0.0);
@@ -670,22 +707,46 @@ function focusCamera(mObject, cpox = 0.0, cpoy = 0.1, cpoz = 0.3){
     });
 }
 
+let activeListElementStack = [];
+function handleListAnimation(){
 
- window.addEventListener('click', ()=>{
+}
+
+window.addEventListener('click', ()=>{
     if(mouseIntersect){
+        let codeList = document.getElementById('codeInfobox');
+        let codeListElements = codeList.getElementsByTagName('li');
+        let musicList = document.getElementById('musicInfobox');
+        let musicListElements = musicList.getElementsByTagName('li');
         switch(mouseIntersect.object){
             case textCodeMesh:
                 console.log("CODE clicked");
+                for(let i = 0; i < codeListElements.length; i++)  codeListElements[i].classList.add('l' + i);
+                for(let i = 0; i < musicListElements.length; i++) musicListElements[i].classList.remove('l' + i);
+                codeList.classList.add('scale-down');
+                musicList.classList.add('scale-down');
                 focusCamera(textCodeMesh, 0.3, 0.1, 0.7);
-                // location.replace("https://github.com/slhm");
+                document.getElementById("codeInfobox").style.opacity = 0.5;
+                document.getElementById("musicInfobox").style.opacity = 0.0;
                 break;   
             case textMusicMesh:
                 console.log("MUSIC clicked");
+                codeList.classList.add('scale-down');
+                musicList.classList.add('scale-up');
+                for(let i = 0; i < codeListElements.length; i++)  codeListElements[i].classList.remove('l' + i);
+                for(let i = 0; i < musicListElements.length; i++) musicListElements[i].classList.add('l' + i);
                 focusCamera(textMusicMesh, 0.3, 0.1, 0.7);
-                // location.replace("https://floatingnomore.bandcamp.com/")
+                document.getElementById("codeInfobox").style.opacity = 0.0;
+                document.getElementById("musicInfobox").style.opacity = 0.5;
                 break;   
             default:
+                codeList.classList.add('scale-down');
+                musicList.classList.add('scale-down');
+                for(let i = 0; i < codeListElements.length; i++) codeListElements[i].classList.remove('l' + i);
+                for(let i = 0; i < musicListElements.length; i++) musicListElements[i].classList.remove('l' + i);
                 focusCamera(textMesh, 0.5, 0.3, 1.6);
+                document.getElementById("codeInfobox").style.opacity = 0.0;
+                document.getElementById("musicInfobox").style.opacity = 0.0;
                 break;
             }
         }
@@ -697,7 +758,7 @@ function focusCamera(mObject, cpox = 0.0, cpoy = 0.1, cpoz = 0.3){
  * Post-Processing
  */
 
- const effectComposer = new EffectComposer(renderer);
+//  const effectComposer = new EffectComposer(renderer);
 
 
 /**
@@ -719,24 +780,31 @@ const tick = () =>
 
     const objectsToTest = [textMesh, textCodeMesh, textMusicMesh];
     if(objectsToTest[0] && objectsToTest[1] && objectsToTest[2]){
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(objectsToTest);
 
-    
-    raycaster.setFromCamera(mouse, camera);
+        if(intersects.length){
+            mouseIntersect = intersects[0];
+        }else{
+            mouseIntersect = null;
+        }
 
-    const intersects = raycaster.intersectObjects(objectsToTest);
-
-    if(intersects.length){
-        mouseIntersect = intersects[0];
-    }else{
-        mouseIntersect = null;
-    }
-
-    for(const inter of intersects) if(inter.object !== textMesh) inter.object.material.color.set('#aaa');
-    for(const obj of objectsToTest){
-        if(!intersects.find(intersect => intersect.object === obj)){
-            obj.material.color.set('#fff');
+        for(const inter of intersects) if(inter.object !== textMesh) inter.object.material.color.set('#aaa');
+        for(const obj of objectsToTest){
+            if(!intersects.find(intersect => intersect.object === obj)){
+                obj.material.color.set('#fff');
+            }
         }
     }
+
+    for(const point of points){
+        const screenPos = point.position.clone();
+        screenPos.project(camera);
+        // console.log(screenPos.x);
+
+        const translateX = screenPos.x * sizes.width * 0.5;
+        const translateY = -screenPos.y * sizes.height * 0.5;
+        point.element.style.transform = `translateX(${translateX}px) translateY(${translateY}px)`;
     }
     // Render
     renderer.render(scene, camera)

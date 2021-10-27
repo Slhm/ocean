@@ -1,6 +1,9 @@
+@import url(https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+Antique:wght@300&display=swap);
+
 *{
     margin: 0;
     padding: 0;
+    font-family: 'Zen Kaku Gothic Antique', sans-serif;
 }
 .webgl{
     position: fixed;
@@ -13,6 +16,123 @@ html,
 body{
     overflow: hidden;
 }
+
+.infobox{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+.text{
+    position: absolute;
+    top: 30px;
+    left: -120px;
+    width: 400px;
+    height: 300px;
+    padding: 20px;
+    /* border-radius: 4px; */
+    /* background: #fff; */
+    /* border: 1px solid #fff; */
+    color: #fff;
+    /* font-family: Arial, Helvetica, sans-serif; */
+    font-weight: 100;
+    font-size: 18px;
+    /* opacity: 0; */
+    /* transform: scale(0,0);
+    transition: transform 0.3; */
+    /* opacity: 1; */
+    transform: translateX(-10000px);
+
+}
+
+a{
+    color: rgb(138, 187, 255);
+    text-decoration: none;
+    /* opacity: 0; */
+}
+
+.list-item{
+    opacity: 0;
+    transform: translateX(-10000px);
+
+}
+
+.scale-down{
+    scale: 0;
+}
+
+.scale-up{
+    scale: 1;
+}
+
+.l0{
+    webkit-animation: fade-in 1s linear 0.5s;
+    animation: fade-in 1s linear 0.5s;
+    animation-fill-mode: forwards;
+
+}
+
+.l1{
+    webkit-animation: fade-in 1s linear 1s;
+    animation: fade-in 1s linear 1s;
+    animation-fill-mode: forwards;
+
+}
+
+.l2{
+    webkit-animation: fade-in 1s linear 1.5s;
+    animation: fade-in 1s linear 1.5s;
+    animation-fill-mode: forwards;
+
+}
+
+.l3{
+    webkit-animation: fade-in 1s linear 2s;
+    animation: fade-in 1s linear 2s;
+    animation-fill-mode: forwards;
+
+}
+
+#codeInfobox {
+    opacity: 0.0;
+}
+
+#musicInfobox{
+    opacity: 0.0;
+}
+
+ul{
+    list-style-type: none;
+}
+
+li{
+    line-height: 2.2;
+}
+
+.animated-text{
+    animation: fade-in 1s;
+}
+
+.infobox.visible{
+    transform:scale(1,1);
+}
+
+@keyframes fade-in {
+    0%{
+        transform: translateX(100px);
+        opacity: 0;
+        /* color: #000; */
+        /* transform: scale(0); */
+    }
+    100%{
+        transform: translateX(0px);
+        opacity: 1;
+        /* color: #fff; */
+        /* transform: scale(1); */
+    }
+    
+}
+
 
 #box1{
     height: 50px;
@@ -32,14 +152,14 @@ body{
     margin-top: 50px;
     margin-left: 50px;
     position: absolute;
-    #padding-left: 2px;
+    padding-left: 2px;
     box-sizing: border-box;
     animation: spin2 2s linear infinite;
 }
 
 @keyframes spin1{
     0%{
-        #transform: rotate(0deg);
+        transform: rotate(0deg);
         margin-left: 0px;
         margin-top: 0px;
     }
