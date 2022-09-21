@@ -783,7 +783,7 @@ window.addEventListener('click', ()=>{
             case textCodeMesh:
                 for(let i = 0; i < codeListElements.length; i++)  codeListElements[i].classList.add('l' + i);
                 for(let i = 0; i < musicListElements.length; i++) musicListElements[i].classList.remove('l' + i);
-                codeList.classList.add('scale-down');
+                codeList.classList.add('scale-up');
                 musicList.classList.add('scale-down');
                 focusCamera(textCodeMesh, 0.3, 0.1, 0.7);
                 document.getElementById("codeInfobox").style.opacity = 0.5;
@@ -801,7 +801,7 @@ window.addEventListener('click', ()=>{
                 document.getElementById("musicInfobox").style.opacity = 0.5;
                 break;   
 
-            // Code object clicked. Changes camera position and target. Adds/removes CSS animation from relevant objects.
+            // Title object clicked. Changes camera position and target. Adds/removes CSS animation from relevant objects.
             default:
                 codeList.classList.add('scale-down');
                 musicList.classList.add('scale-down');
