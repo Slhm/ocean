@@ -501,7 +501,6 @@ scene.add(ambiLight);
 // Font stuff
 
 const textureLoader = new THREE.TextureLoader();
-// const textMaterialMatcapTex = textureLoader.load('/textures/matcaps/9.png');
 
 const fontLoadManager = new THREE.LoadingManager(
     () => {
@@ -725,6 +724,7 @@ controls.target = new THREE.Vector3(0.3, 0.2, 0.0);
 /**
  * Handle vertical screens
  */
+// TPDP: this
 // camera.fov = sizes.vertical ? 90 : 75;
 // document.getElementsByClassName('text').style.fontSize = 
 
