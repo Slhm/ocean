@@ -32,6 +32,35 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 scene.fog = new THREE.FogExp2(0x000000, 0.25);
 
+// Loading screen
+
+const loadingPlaneUniforms = {
+    uAlpha: {value: 1.0}
+};
+
+const loadingPlaneGeom = new THREE.PlaneGeometry(2,2,1,1);
+const loadingPlaneShader = new THREE.MeshBasicMaterial({color: 0xf00});
+const loadingPlaneCustomShader = new THREE.ShaderMaterial({
+    transparent: true,
+    uniforms: {
+        uAlpha: {value: loadingPlaneUniforms.uAlpha}
+    },
+    vertexShader: `
+    void main(){
+        gl_Position = vec4(position, 1.0);
+    }
+    `,
+    fragmentShader: `
+    uniform float uAlpha;
+    void main(){
+        gl_FragColor = vec4(0.0, 0.0, 0.0, uAlpha);
+    }
+    `
+})
+
+const loadingPlaneMesh = new THREE.Mesh(loadingPlaneGeom, loadingPlaneCustomShader);
+scene.add(loadingPlaneMesh);
+
 /**
  * Water
  */
@@ -474,8 +503,19 @@ scene.add(ambiLight);
 const textureLoader = new THREE.TextureLoader();
 // const textMaterialMatcapTex = textureLoader.load('/textures/matcaps/9.png');
 
+const fontLoadManager = new THREE.LoadingManager(
+    () => {
+        console.log("loaded");
+        loadingPlaneUniforms.uAlpha.value = 0.0;
 
-const fontLoader = new THREE.FontLoader();
+    },
+    (itemUrl, itemsLoaded, itemsTotal) =>{
+        const progressPercent = (1.0 - (itemsLoaded / itemsTotal));
+        // loadingPlaneUniforms.uAlpha.value = progressPercent;
+        console.log(progressPercent);
+    }
+);
+const fontLoader = new THREE.FontLoader(fontLoadManager);
 const typefaceFont = 'helvetiker_regular.typeface.json';
 
 let textMesh = null;
@@ -503,7 +543,7 @@ fontLoader.load(typefaceFont, (font) => {
     // textMesh.position.set(0,0,0);
     // textMesh.computeBoundingBox();
     textMesh.castShadow = true;
-    textMesh.receiveShadow = true;
+    // textMesh.receiveShadow = true;
     scene.add(textMesh);
     newLight.lookAt(textMesh);
 });
@@ -532,7 +572,7 @@ fontLoader.load(typefaceFont, (font) => {
     textCodeMesh.rotation.y = 0.3;
 
     textCodeMesh.castShadow = true;
-    textCodeMesh.receiveShadow = true;
+    // textCodeMesh.receiveShadow = true;
     scene.add(textCodeMesh);
 });
 
@@ -566,6 +606,8 @@ fontLoader.load(typefaceFont, (font) => {
 
 
 
+
+
 /**
  * Infobox
  */
@@ -576,15 +618,15 @@ const infoPlane = new THREE.Mesh(
     new THREE.MeshStandardMaterial({
         color: new THREE.Color('#fff')
     })
-    )
-    infoPlane.position.x = -0.6;
-    infoPlane.position.y = 0.3;
-    infoPlane.position.z = 0.4;
-    infoPlane.rotateY(0.35);
-    infoPlane.receiveShadow = true;
-    // scene.add(infoPlane);
+);
+infoPlane.position.x = -0.6;
+infoPlane.position.y = 0.3;
+infoPlane.position.z = 0.4;
+infoPlane.rotateY(0.35);
+infoPlane.receiveShadow = true;
+//scene.add(infoPlane);
 
-// Positions
+// 3D Position vectors for clickable objects.
 const points = [
     {
         // Code info box
@@ -634,7 +676,8 @@ gui.hide();
  */
 const sizes = {
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
+    vertical: window.innerWidth / window.innerHeight > 1.0
 }
 
 window.addEventListener('resize', () =>
@@ -642,9 +685,11 @@ window.addEventListener('resize', () =>
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
+    sizes.vertical = sizes.width / sizes.height < 1.0;
 
     // Update camera
     camera.aspect = sizes.width / sizes.height
+    camera.fov = sizes.vertical ? 90 : 75;
     camera.updateProjectionMatrix()
 
     // Update renderer
@@ -652,12 +697,21 @@ window.addEventListener('resize', () =>
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
+function adjustSceneToMobile(){
+    if(sizes.vertical){
+        points.forEach((el, i) =>{
+            el.element.style.fontSize = 12;
+        })
+    }
+}
+
 /**
  * Camera
  */
 // Base camera
 let camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(0.8, 0.5,1.35);
+camera.fov = sizes.vertical ? 90 : 75;
 camera.up = new THREE.Vector3(0,1,0);
 camera.lookAt(0.0, 0.0, 0.0);
 scene.add(camera)
@@ -666,6 +720,13 @@ scene.add(camera)
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
 controls.target = new THREE.Vector3(0.3, 0.2, 0.0);
+
+
+/**
+ * Handle vertical screens
+ */
+// camera.fov = sizes.vertical ? 90 : 75;
+// document.getElementsByClassName('text').style.fontSize = 
 
 /**
  * Renderer
@@ -707,20 +768,19 @@ function focusCamera(mObject, cpox = 0.0, cpoy = 0.1, cpoz = 0.3){
     });
 }
 
-let activeListElementStack = [];
-function handleListAnimation(){
 
-}
-
+// oh, boy. this is a mess. TODO: generalize into functions somehow.
 window.addEventListener('click', ()=>{
     if(mouseIntersect){
         let codeList = document.getElementById('codeInfobox');
         let codeListElements = codeList.getElementsByTagName('li');
         let musicList = document.getElementById('musicInfobox');
         let musicListElements = musicList.getElementsByTagName('li');
+
         switch(mouseIntersect.object){
+        
+            // Code object clicked. Changes camera position and target. Adds/removes CSS animation from relevant objects.
             case textCodeMesh:
-                console.log("CODE clicked");
                 for(let i = 0; i < codeListElements.length; i++)  codeListElements[i].classList.add('l' + i);
                 for(let i = 0; i < musicListElements.length; i++) musicListElements[i].classList.remove('l' + i);
                 codeList.classList.add('scale-down');
@@ -729,8 +789,9 @@ window.addEventListener('click', ()=>{
                 document.getElementById("codeInfobox").style.opacity = 0.5;
                 document.getElementById("musicInfobox").style.opacity = 0.0;
                 break;   
+
+            // Music object clicked. Changes camera position and target. Adds/removes CSS animation from relevant objects.
             case textMusicMesh:
-                console.log("MUSIC clicked");
                 codeList.classList.add('scale-down');
                 musicList.classList.add('scale-up');
                 for(let i = 0; i < codeListElements.length; i++)  codeListElements[i].classList.remove('l' + i);
@@ -739,6 +800,8 @@ window.addEventListener('click', ()=>{
                 document.getElementById("codeInfobox").style.opacity = 0.0;
                 document.getElementById("musicInfobox").style.opacity = 0.5;
                 break;   
+
+            // Code object clicked. Changes camera position and target. Adds/removes CSS animation from relevant objects.
             default:
                 codeList.classList.add('scale-down');
                 musicList.classList.add('scale-down');
@@ -750,10 +813,9 @@ window.addEventListener('click', ()=>{
                 break;
             }
         }
-        // focusCamera(textMesh, 0.5, 0.3, 1.6);
-
-    console.log(mouseIntersect)
 })
+
+
 /**
  * Post-Processing
  */
@@ -773,7 +835,8 @@ const tick = () =>
     const elapsedTime = clock.getElapsedTime()
 
     // Update controls
-    controls.update()
+    controls.update();
+
 
     customUniforms.uTime.value = elapsedTime;
 
@@ -800,7 +863,6 @@ const tick = () =>
     for(const point of points){
         const screenPos = point.position.clone();
         screenPos.project(camera);
-        // console.log(screenPos.x);
 
         const translateX = screenPos.x * sizes.width * 0.5;
         const translateY = -screenPos.y * sizes.height * 0.5;
